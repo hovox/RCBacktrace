@@ -11,14 +11,14 @@ import Foundation
 public class StackSymbol: NSObject {
     public let symbol: String
     public let file: String
-    public let address: UInt
-    public let symbolAddress: UInt
+    public let address: uintptr_t
+    public let symbolAddress: uintptr_t
     public let demangledSymbol: String
     public let image: String
     public let offset: Int
     public let index: Int
 
-    public init(symbol: String, file: String, address: UInt, symbolAddress: UInt, image: String, offset: Int, index: Int) {
+    public init(symbol: String, file: String, address: uintptr_t, symbolAddress: uintptr_t, image: String, offset: Int, index: Int) {
         self.symbol = symbol
         self.file = file
         self.address = address
@@ -49,7 +49,7 @@ public class StackSymbol: NSObject {
 class StackSymbolFactory {
 
     /// Address for which this struct was constructed
-    static func  create(address: UInt, index: Int) -> StackSymbol {
+    static func  create(address: uintptr_t, index: Int) -> StackSymbol {
         var info = dl_info()
         dladdr(UnsafeRawPointer(bitPattern: address), &info)
 

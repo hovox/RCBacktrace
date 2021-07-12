@@ -9,7 +9,7 @@
 import Foundation
 
 @_silgen_name("mach_backtrace")
-public func backtrace(_ thread: thread_t, stack: UnsafeMutablePointer<UnsafeMutableRawPointer?>!, _ maxSymbols: Int32) -> Int32
+public func backtrace(_ thread: thread_t, stack: UnsafeMutablePointer<uintptr_t>!, _ maxSymbols: Int32) -> Int32
 
 @objc public class RCBacktrace: NSObject {
 
@@ -33,15 +33,17 @@ public func backtrace(_ thread: thread_t, stack: UnsafeMutablePointer<UnsafeMuta
 
         var symbols = [StackSymbol]()
         let stackSize: UInt32 = 128
-        let addrs = UnsafeMutablePointer<UnsafeMutableRawPointer?>.allocate(capacity: Int(stackSize))
+        let addrs = UnsafeMutablePointer<uintptr_t>.allocate(capacity: Int(stackSize))
         defer { addrs.deallocate() }
+        let needsResume = thread_suspend(thread) == KERN_SUCCESS;
         let frameCount = backtrace(thread, stack: addrs, Int32(stackSize))
+        if (needsResume) {
+            thread_resume(thread);
+        }
         let buf = UnsafeBufferPointer(start: addrs, count: Int(frameCount))
 
         for (index, addr) in buf.enumerated() {
-            guard let addr = addr else { continue }
-            let addrValue = UInt(bitPattern: addr)
-            let symbol = StackSymbolFactory.create(address: addrValue, index: index)
+            let symbol = StackSymbolFactory.create(address: addr, index: index)
             symbols.append(symbol)
         }
         return symbols

@@ -20,6 +20,6 @@
  *
  *  @return call stack address array
  */
-int mach_backtrace(thread_t thread, void** stack, int maxSymbols);
+int mach_backtrace(thread_t thread, uintptr_t *const stack, int maxSymbols);
 
 #endif /* mach_backtrace_h */

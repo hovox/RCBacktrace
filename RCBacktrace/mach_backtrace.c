@@ -97,7 +97,7 @@
  *
  *  @return call stack address array
  */
-int mach_backtrace(thread_t thread, void** stack, int maxSymbols) {
+int mach_backtrace(thread_t thread, uintptr_t *const stack, int maxSymbols) {
     _STRUCT_MCONTEXT machineContext;
     mach_msg_type_number_t stateCount = THREAD_STATE_COUNT;
     
@@ -108,14 +108,20 @@ int mach_backtrace(thread_t thread, void** stack, int maxSymbols) {
 
     int i = 0;
 #if defined(__arm__) || defined (__arm64__)
-    stack[i] = (void *)machineContext.__ss.__lr;
+    stack[i] = (uintptr_t)machineContext.__ss.__lr;
     ++i;
 #endif
     void **currentFramePointer = (void **)machineContext.__ss.__framePointer;
     while (i < maxSymbols) {
         void **previousFramePointer = *currentFramePointer;
         if (!previousFramePointer) break;
-        stack[i] = *(currentFramePointer+1);
+#if defined(__arm64__)
+        // Strip program auth code from address prior to storing address.
+        // Intended for Arm64e but is a no-op on other Arm64 archs.
+        stack[i] = (uintptr_t)(*(currentFramePointer + 1)) & 0x0000000fffffffff;
+#else
+        stack[i] = (uintptr_t)(*(currentFramePointer + 1));
+#endif
         currentFramePointer = previousFramePointer;
         ++i;
     }
