@@ -120,6 +120,9 @@ int mach_backtrace(thread_t thread, uintptr_t *const stack, int maxSymbols) {
     ++i;
 #endif
     void **currentFramePointer = (void **)machineContext.__ss.__framePointer;
+    if (!currentFramePointer) {
+        return i;
+    }
     while (i < maxSymbols) {
         void **previousFramePointer = *currentFramePointer;
         if (!previousFramePointer) break;

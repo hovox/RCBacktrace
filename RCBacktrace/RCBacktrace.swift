@@ -46,7 +46,6 @@ public func backtrace(_ thread: thread_t, stack: UnsafeMutablePointer<uintptr_t>
             let symbol = StackSymbolFactory.create(address: addr, index: index)
             if let symbol = symbol {
                 symbols.append(symbol)
-                print("added")
             } else {
                 print("addr can't convert to symbol:\(addr)")
             }
