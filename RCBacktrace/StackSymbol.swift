@@ -49,12 +49,13 @@ public class StackSymbol: NSObject {
 class StackSymbolFactory {
 
     /// Address for which this struct was constructed
-    static func  create(address: uintptr_t, index: Int) -> StackSymbol {
+    static func  create(address: uintptr_t, index: Int) -> StackSymbol? {
         var info = dl_info()
         dladdr(UnsafeRawPointer(bitPattern: address), &info)
+        guard let dli_fname = info.dli_fname else { return nil }
 
         let stackSymbol = StackSymbol(symbol: symbol(info: info),
-                                      file: String(cString: info.dli_fname),
+                                      file: String(cString: dli_fname),
                                       address: address,
                                       symbolAddress: unsafeBitCast(info.dli_saddr, to: UInt.self),
                                       image: image(info: info),

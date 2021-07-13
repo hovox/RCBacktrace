@@ -17,21 +17,25 @@
 #define THREAD_STATE_FLAVOR x86_THREAD_STATE
 #define THREAD_STATE_COUNT  x86_THREAD_STATE_COUNT
 #define __framePointer      __ebp
+#define __instructionAddress      __eip
 
 #elif defined __x86_64__
 #define THREAD_STATE_FLAVOR x86_THREAD_STATE64
 #define THREAD_STATE_COUNT  x86_THREAD_STATE64_COUNT
 #define __framePointer      __rbp
+#define __instructionAddress      __rip
 
 #elif defined __arm__
 #define THREAD_STATE_FLAVOR ARM_THREAD_STATE
 #define THREAD_STATE_COUNT  ARM_THREAD_STATE_COUNT
 #define __framePointer      __r[7]
+#define __instructionAddress      __pc
 
 #elif defined __arm64__
 #define THREAD_STATE_FLAVOR ARM_THREAD_STATE64
 #define THREAD_STATE_COUNT  ARM_THREAD_STATE64_COUNT
 #define __framePointer      __fp
+#define __instructionAddress      __pc
 
 #else
 #error "Current CPU Architecture is not supported"
@@ -107,6 +111,10 @@ int mach_backtrace(thread_t thread, uintptr_t *const stack, int maxSymbols) {
     }
 
     int i = 0;
+    
+    stack[i] = (uintptr_t)machineContext.__ss.__instructionAddress;
+    ++i;
+
 #if defined(__arm__) || defined (__arm64__)
     stack[i] = (uintptr_t)machineContext.__ss.__lr;
     ++i;
