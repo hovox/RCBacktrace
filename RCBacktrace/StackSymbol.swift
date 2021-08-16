@@ -87,12 +87,17 @@ class StackSymbolFactory {
 
     /// returns: the address' offset relative to the nearest symbol
     private static func offset(info: dl_info, address: UInt) -> Int {
+        let symbolAddress = UInt(bitPattern: info.dli_saddr)
+
         if let dli_sname = info.dli_sname, let _ = String(validatingUTF8: dli_sname) {
-            return Int(address - UInt(bitPattern: info.dli_saddr))
+            return address > symbolAddress ? Int(address - symbolAddress) : 0
+
         } else if let dli_fname = info.dli_fname, let _ = String(validatingUTF8: dli_fname) {
-            return Int(address - UInt(bitPattern: info.dli_fbase))
+            let baseAddress = UInt(bitPattern: info.dli_fbase)
+            return address > baseAddress ? Int(address - baseAddress) : 0
+
         } else {
-            return Int(address - UInt(bitPattern: info.dli_saddr))
+            return address > symbolAddress ? Int(address - symbolAddress) : 0
         }
     }
 }
