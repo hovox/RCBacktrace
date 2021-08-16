@@ -52,7 +52,9 @@ class StackSymbolFactory {
     static func  create(address: uintptr_t, index: Int) -> StackSymbol? {
         var info = dl_info()
         dladdr(UnsafeRawPointer(bitPattern: address), &info)
-        guard let dli_fname = info.dli_fname else { return nil }
+        guard let dli_fname = info.dli_fname,
+              address > UInt(bitPattern: info.dli_saddr),
+              address > UInt(bitPattern: info.dli_fbase) else { return nil }
 
         let stackSymbol = StackSymbol(symbol: symbol(info: info),
                                       file: String(cString: dli_fname),
@@ -87,17 +89,12 @@ class StackSymbolFactory {
 
     /// returns: the address' offset relative to the nearest symbol
     private static func offset(info: dl_info, address: UInt) -> Int {
-        let symbolAddress = UInt(bitPattern: info.dli_saddr)
-
         if let dli_sname = info.dli_sname, let _ = String(validatingUTF8: dli_sname) {
-            return address > symbolAddress ? Int(address - symbolAddress) : 0
-
+            return Int(address - UInt(bitPattern: info.dli_saddr))
         } else if let dli_fname = info.dli_fname, let _ = String(validatingUTF8: dli_fname) {
-            let baseAddress = UInt(bitPattern: info.dli_fbase)
-            return address > baseAddress ? Int(address - baseAddress) : 0
-
+            return Int(address - UInt(bitPattern: info.dli_fbase))
         } else {
-            return address > symbolAddress ? Int(address - symbolAddress) : 0
+            return Int(address - UInt(bitPattern: info.dli_saddr))
         }
     }
 }
