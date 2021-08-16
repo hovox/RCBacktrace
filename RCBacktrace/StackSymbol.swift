@@ -52,7 +52,9 @@ class StackSymbolFactory {
     static func  create(address: uintptr_t, index: Int) -> StackSymbol? {
         var info = dl_info()
         dladdr(UnsafeRawPointer(bitPattern: address), &info)
-        guard let dli_fname = info.dli_fname else { return nil }
+        guard let dli_fname = info.dli_fname,
+              address > UInt(bitPattern: info.dli_saddr),
+              address > UInt(bitPattern: info.dli_fbase) else { return nil }
 
         let stackSymbol = StackSymbol(symbol: symbol(info: info),
                                       file: String(cString: dli_fname),
